@@ -47,7 +47,6 @@ exports.signIn = async (req, res, next) => {
     }
     const Match = await bcryptJS.compare(password, user.password);
     if (Match) {
-      console.log("login++++", DateTime.now().setZone("Asia/Dubai"));
       // Create a new user activity entry
       const userActivity = new UserActivity({
         loginTime: DateTime.now().setZone("Asia/Dubai"),
@@ -123,7 +122,6 @@ exports.logout = async (req, res, next) => {
 
     // Set logoutTime to the current time in "Asia/Dubai" timezone
     const logoutTime = DateTime.now().setZone("Asia/Dubai");
-    console.log("logout", DateTime.now().setZone("Asia/Dubai"));
 
     // Calculate time difference
     const timeDifference = new Date(logoutTime) - loginTime;

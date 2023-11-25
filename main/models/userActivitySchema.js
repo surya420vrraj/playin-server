@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { DateTime } = require("luxon");
 const userActivitySchema = new mongoose.Schema(
   {
     user: {
@@ -11,7 +12,7 @@ const userActivitySchema = new mongoose.Schema(
     totalHours: { type: Object, default: { hours: 0, minutes: 0 } },
     date: {
       type: Date,
-      default: Date.now,
+      default: DateTime.now().setZone("Asia/Dubai").toJSDate(),
     },
   },
   { timestamps: true }
