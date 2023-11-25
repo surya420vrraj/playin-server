@@ -2,36 +2,14 @@ const Referal = require("../models/referalSchema");
 
 exports.index = async (req, res, next) => {
   try {
-    const { role, id } = req.user;
     const customer = await Referal.find()
       .sort({ createdAt: -1 })
       .populate("createdBy");
-    if (role === 2) {
-      return res.json({
-        message: "All customer data",
-        success: true,
-        data: customer,
-      });
-    } else if (role === 1) {
-      const data = customer?.filter(
-        (item) =>
-          item?.createdBy?._id?.toString() === id || item.createdBy.role === 0
-      );
-      return res.json({
-        message: "All admin and employee list data",
-        success: true,
-        data,
-      });
-    } else {
-      const data = customer?.filter(
-        (item) => item?.createdBy?._id?.toString() === id
-      );
-      return res.json({
-        message: "My data customer",
-        success: true,
-        data,
-      });
-    }
+    return res.json({
+      message: "All customer data",
+      success: true,
+      data: customer,
+    });
   } catch (e) {
     next(e);
   }
@@ -112,9 +90,20 @@ exports.updateUser = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
   try {
-    const referal = Referal.findById(req.params.id);
-    await referal.deleteOne();
-    res.json({ message: "Referal deleted succesfully", success: true });
+    const { role } = req.user;
+    if (role === 2) {
+      const referal = Referal.findById(req.params.id);
+      await referal.deleteOne();
+      return res.json({
+        message: "Customer record deleted succesfully",
+        success: true,
+      });
+    } else {
+      return res.json({
+        message: "Only Super admin can delete this records",
+        success: false,
+      });
+    }
   } catch (e) {
     next(e);
   }
