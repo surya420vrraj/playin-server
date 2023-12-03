@@ -1,8 +1,10 @@
 const Break = require("../models/breakSchema");
+const UserActivity = require("../models/userActivitySchema");
+
 exports.applybreak = async (req, res, next) => {
   try {
     const { breakType, reason, start, end } = req.body;
-    const { id } = req.user;
+    const { id, loggindetails } = req.user;
     const breakData = {
       breakType,
       reason,
@@ -21,17 +23,14 @@ exports.applybreak = async (req, res, next) => {
 
     const breakInstance = new Break(breakData);
     const savedBreak = await breakInstance.save();
-
-    // const userEmail = "pro2000a1@gmail.com";
-    // const emailSubject = "Break Created";
-    // const emailTemplateData = { userName: "New User", status: "Approved" };
-
-    // EmailUtils.sendEmail(
-    //   userEmail,
-    //   emailSubject,
-    //   "approvalStatus",
-    //   emailTemplateData
-    // );
+    let loggedUser;
+    if (loggindetails?._id) {
+      loggedUser = await UserActivity.findById(loggindetails?._id).populate(
+        "break"
+      );
+      loggedUser.break.push(savedBreak._id);
+      loggedUser = await loggedUser.save();
+    }
 
     res.status(201).json({
       success: true,

@@ -161,6 +161,7 @@ exports.allUserActivity = async (req, res, next) => {
     const { role, id } = req.user;
     const data = await UserActivity.find()
       .populate("user")
+      .populate("break")
       .sort({ createdAt: -1 });
     if (role === 2) {
       return res.json({ message: "All user data", data, success: true });
@@ -185,5 +186,41 @@ exports.allUserActivity = async (req, res, next) => {
     }
   } catch (e) {
     next(e);
+  }
+};
+
+exports.updateAllUserTimes = async (req, res, next) => {
+  try {
+    const allUserActivityEntries = await UserActivity.find({
+      "totalHours.hours": 0,
+      "totalHours.minutes": 0,
+      "totalHours.seconds": 0,
+      logoutTime: { $ne: null }, // $ne means "not equal to"
+    });
+
+    for (const userEntry of allUserActivityEntries) {
+      const loginTime = DateTime.fromJSDate(userEntry.loginTime, {
+        zone: "Asia/Dubai",
+      });
+      const logoutTime = DateTime.fromJSDate(userEntry.logoutTime, {
+        zone: "Asia/Dubai",
+      });
+
+      const timeDifference = logoutTime
+        .diff(loginTime, ["hours", "minutes", "seconds"])
+        .toObject();
+
+      // Update loginTime, logoutTime, and total duration
+      userEntry.totalHours = timeDifference.hours;
+      userEntry.totalMinutes = timeDifference.minutes;
+      userEntry.totalSeconds = timeDifference.seconds;
+
+      // Save the updated userEntry
+      await userEntry.save();
+    }
+
+    res.json({ message: "All user times updated successfully", success: true });
+  } catch (error) {
+    next(error);
   }
 };

@@ -48,11 +48,14 @@ exports.signIn = async (req, res, next) => {
     const Match = await bcryptJS.compare(password, user.password);
     if (Match) {
       // Create a new user activity entry
-      const userActivity = new UserActivity({
-        loginTime: DateTime.now().setZone("Asia/Dubai"),
-        user: user.id,
-      });
-      const loggindetails = await userActivity.save();
+      let loggindetails;
+      if (user.role !== 2) {
+        const userActivity = new UserActivity({
+          loginTime: DateTime.now().setZone("Asia/Dubai"),
+          user: user.id,
+        });
+        loggindetails = await userActivity.save();
+      }
       const token = jwt.sign(
         {
           id: user._id,
@@ -107,45 +110,29 @@ exports.deleteUser = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
-  const { loggindetails } = req.user;
+  const { loggindetails, role } = req.user;
   try {
-    const userEntry = await UserActivity.findById(loggindetails._id);
+    if (role === 2) {
+      return res.json({ success: true, message: "logout succesful" });
+    } else {
+      const userEntry = await UserActivity.findById(loggindetails._id);
 
-    if (Object.keys(userEntry).length === 0) {
-      return res
-        .status(404)
-        .json({ message: "User not found or no entries by the id" });
+      if (Object.keys(userEntry).length === 0) {
+        return res
+          .status(404)
+          .json({ message: "User not found or no entries by the id" });
+      }
+
+      userEntry.logout = true;
+
+      // Save the updated userEntry
+      await userEntry.save();
+
+      res.json({
+        message: "Logout successfully",
+        success: true,
+      });
     }
-
-    // Assuming loginTime is stored in userEntry
-    const loginTime = new Date(userEntry.loginTime);
-
-    // Set logoutTime to the current time in "Asia/Dubai" timezone
-    const logoutTime = DateTime.now().setZone("Asia/Dubai");
-
-    // Calculate time difference
-    const timeDifference = new Date(logoutTime) - loginTime;
-
-    // Convert time difference to hours and minutes
-    const totalHours = Math.floor(timeDifference / (1000 * 60 * 60));
-    const totalMinutes = Math.floor(
-      (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
-    );
-
-    // Update userEntry with total hours and minutes
-    userEntry.totalHours = { hours: totalHours, minutes: totalMinutes };
-
-    // Update logoutTime
-    userEntry.logoutTime = logoutTime;
-
-    // Save the updated userEntry
-    await userEntry.save();
-
-    res.json({
-      totalWorking: { hours: totalHours, minutes: totalMinutes },
-      message: "Logout successfully",
-      success: true,
-    });
   } catch (error) {
     next(error);
   }
