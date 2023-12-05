@@ -53,6 +53,7 @@ exports.signIn = async (req, res, next) => {
         const userActivity = new UserActivity({
           loginTime: DateTime.now().setZone("Asia/Dubai"),
           user: user.id,
+          date: DateTime.now().setZone("Asia/Dubai"),
         });
         loggindetails = await userActivity.save();
       }
