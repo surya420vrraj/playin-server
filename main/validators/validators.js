@@ -14,3 +14,15 @@ exports.hasEndtime = body("end")
 exports.hasReason = body("reason")
   .notEmpty()
   .withMessage("Reason cannot be empty");
+
+exports.hasUserName = body("userName")
+  .notEmpty()
+  .withMessage("User name cannot be empty");
+
+exports.hasEmail = body("email")
+  .notEmpty()
+  .withMessage("Email field cannot be empty");
+
+exports.hasPassword = body("pass")
+  .notEmpty()
+  .withMessage("Password field cannot be empty");
